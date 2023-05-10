@@ -5,9 +5,17 @@ const terminalInputField = document.querySelector('.terminal-input-field');
 
 toggleVisibility(terminalInput);
 
+const aiTag = "<span class='ai-tag'>&lt;Michel[AI]&gt;</span>";
+const userTag = "<span class='user-tag'>&lt;You[Human?]&gt;</span>";
+
 document.addEventListener("DOMContentLoaded", () => {
-    let greetingText = "<p>Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience. Feel free to ask me anything!</p>";
-    addTextDiv(greetingText, true, () => {
+    // let greetingText = "<p>Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience. Feel free to ask me anything!</p>";
+    const greetingText = `<div><p>${aiTag} Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience.</p><p>Feel free to ask me anything!</p>`;
+    const examplesText = "<div id='prompt-examples'><button class='button-prompt-examples'>Tell me about yourself.</button><button class='button-prompt-examples'>Why should I hire you?</button><button class='button-prompt-examples'>Can you show me your CV?</button></div></div>"
+    // const fullText = `<p> This is a paragraph with a <span>span element</span>, an <img src="example.png" alt="example image" width="200" height="100">, and a <a href="https://www.example.com">link</a>.</p>`;
+    const fullText = greetingText + examplesText;
+    addHtmlElementsFromString(fullText, true, () => {
+        // addTextDiv(examplesText, false);
         // activate input field once greeting is over
         toggleVisibility(terminalInput);
         focusInputField(terminalInputField);
@@ -39,7 +47,7 @@ terminalInputField.addEventListener('keydown', (event) => {
         toggleVisibility(terminalInput);
 
         // add user message div
-        addTextDiv(userPrompt)
+        addHtmlElementsFromString(`<p>${userTag} ${userPrompt}</p>`)
 
         // clear input field
         terminalInputField.value = '';
@@ -51,7 +59,7 @@ terminalInputField.addEventListener('keydown', (event) => {
 
 
 
-function addTextDiv(text, withAnimation = false, callback) {
+function addHtmlElementsFromString(text, withAnimation = false, callback) {
 
     // create div for new message
     var msgDiv = document.createElement('div');
@@ -62,28 +70,135 @@ function addTextDiv(text, withAnimation = false, callback) {
     // insert message div right above input field inside scroll view
     terminalBody.insertBefore(msgDiv, anchor);
 
-    // add animation to text if withAnimation
-    if (withAnimation && callback)
-        animateText(msgDiv, text, callback)
-    else if(withAnimation)
-        animateText(msgDiv, text)
-    else
-        msgDiv.innerHTML += `<p>> ${text}</p>`;
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = text;
+
+    // Get all the child nodes of the temporary div
+    const childNodes = tempDiv.childNodes;
+    console.log("first ", childNodes)
+    const delay = 50;
+
+    addChildNodesWithDelay(msgDiv, childNodes, delay, callback);
+
+    // msgDiv.append(tempDiv);
+    // const elements = createHtmlElementsFromString(text);
+    // console.log(typeof(elements));
+    // const parent = msgDiv;
+    // console.log(elements);
+    // elements.forEach((element) => {
+    //     console.log(element);
+    // });
+    // addElementsToParent(parent, elements);
+
+    // // add animation to text if withAnimation
+    // if (withAnimation && callback)
+    //     animateText(msgDiv, text, callback)
+    // else if(withAnimation)
+    //     animateText(msgDiv, text)
+    // else
+    //     msgDiv.innerHTML += `<p>> ${text}</p>`;
 }
+
+async function addChildNodesWithDelay(parentNode, childNodes, delay, callback) {
+    for (let i = 0; i < childNodes.length; i++) {
+        const childNode = childNodes[i];
+        await new Promise(resolve => {
+            setTimeout(() => {
+                if (childNode.nodeName === "DIV") {
+                    const newParentNode = document.createElement("div");
+                    if (childNode.id !== '')
+                        newParentNode.id = childNode.id;
+                    parentNode.appendChild(newParentNode);
+                    addChildNodesWithDelay(newParentNode, childNode.children, delay);
+                    resolve();
+                } else if (childNode.nodeName === "P") {
+                    const text = childNode.innerHTML;
+                    console.log("second ", text);
+                    childNode.innerHTML = "";
+                    const newParentNode = document.createElement("p");
+                    if (childNode.id !== '')
+                        newParentNode.id = childNode.id;
+                    parentNode.appendChild(newParentNode);
+                    animateText(newParentNode, text, () => {
+                        resolve();
+                    });
+                } else {
+                    parentNode.appendChild(childNode.cloneNode(true));
+                    resolve();
+                }
+            }, i * delay);
+        });
+    }
+    if (callback) {
+        callback();
+    }
+}
+
+function animateText(content, htmlText, callback) {
+    const elements = getHtmlElements(htmlText);
+    console.log(elements);
+    var elementIndex = 0;
+    var charIndex = 0;
+    var textIndex = 0;
+    // console.log("len: ", htmlText.length);
+    const intervalId = setInterval(() => {
+        // console.log("textIndex: ", textIndex);
+        const curElement = elements[elementIndex];
+        // console.log(curElement);
+        const firstChar = curElement.charAt(charIndex);
+        if (firstChar === "<") {
+            content.innerHTML += elements[elementIndex];
+            textIndex += elements[elementIndex].length;
+            elementIndex++;
+        }
+        else {
+            content.innerHTML += elements[elementIndex].charAt(charIndex);
+            charIndex++;
+            textIndex++;
+            if (charIndex >= elements[elementIndex].length) {
+                charIndex = 0;
+                elementIndex++;
+            }
+        }
+        if (textIndex >= htmlText.length - 1) {
+            clearInterval(intervalId);
+            if (callback) {
+                callback();
+            }
+        }
+    }, 20);
+}
+function getHtmlElements(htmlString) {
+    const div = document.createElement('div');
+    div.innerHTML = htmlString.trim();
+    const nodes = Array.from(div.childNodes);
+    return nodes.map(node => node.outerHTML || node.textContent);
+}
+
+
+
+
+
+
+
+
+
+
 
 // Handle Sending Prompt to GPT API and add response to chat
 async function getGptResponse(prompt) {
     // code for sending prompt to gpt api:
     const stringResponse = await getResponse(prompt);
     var htmlResponse = '';
-    if(stringResponse == '')
-        htmlResponse = '<p>Sorry, my AI brain (aka the API of GPT3.5) is currently not connected. Por eso everything I say is bullshit:)</p>';
+    if (stringResponse == '')
+        htmlResponse = `<p>${aiTag} Sorry, my AI brain (aka the API of GPT3.5) is currently not connected. Por eso everything I say is bullshit:)</p>`;
     else
-        htmlResponse = `<p>${stringResponse}</p>`;
+        htmlResponse = `<p>${aiTag} ${stringResponse}</p>`;
     //...
 
     // add div and animate text
-    addTextDiv(htmlResponse, true, () => {
+    addHtmlElementsFromString(htmlResponse, true, () => {
         // activate input field again after response is finished
         toggleVisibility(terminalInput);
         focusInputField(terminalInputField);
@@ -92,9 +207,12 @@ async function getGptResponse(prompt) {
 
 
 // OPEN AI CODE
-const API_KEY = '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';
+
+
+const apiInput = document.querySelector('.api-key');
 
 async function getResponse(prompt) {
+    const API_KEY = apiInput.value;
     var responseText = '';
     const failText = 'Sorry, my AI brain (aka the API of GPT3.5) is currently not connected. Por eso everything I say is bullshit:)';
     try {
@@ -107,7 +225,7 @@ async function getResponse(prompt) {
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo',
                 messages: [
-                    { role: 'system', content: 'Act like Michel Hartmann, a charismatic Mechatronics Student working at Mercedes-Benz that likes to do Software Developement'},
+                    { role: 'system', content: 'Act like Michel Hartmann, a charismatic Mechatronics Student working at Mercedes-Benz that likes to do Software Developement' },
                     { role: 'user', content: prompt }
                 ],
                 temperature: 1.0,
@@ -131,73 +249,20 @@ async function getResponse(prompt) {
         responseText = failText;
     }
     return responseText;
-  }
-
-
-
-
-// function animateText(content, html) {
-//     let index = 0;
-//     const intervalId = setInterval(() => {
-//       content.innerHTML += html.charAt(index);
-//       index++;
-//       if (index > html.length) {
-//         clearInterval(intervalId);
-//       }
-//     }, 50);
-//   }
-
-function animateText(content, htmlText, callback) {
-    let index = 0;
-    let closingTags = '';
-    let listOpened = false;
-    let listItemOpened = false;
-    const intervalId = setInterval(() => {
-        const char = htmlText.charAt(index);
-        if (char === '<') {
-            // Check if opening or closing tag
-            const closingTagIndex = htmlText.indexOf('>', index);
-            const tag = htmlText.substring(index, closingTagIndex + 1);
-            if (tag.charAt(1) === '/') {
-                if (tag === '</li>') {
-                    listItemOpened = false;
-                    closingTags += tag;
-                } else if (tag === '</ul>') {
-                    listOpened = false;
-                    closingTags += tag;
-                } else {
-                    closingTags += tag;
-                }
-            } else {
-                if (tag === '<ul>') {
-                    listOpened = true;
-                    content.innerHTML += tag;
-                } else if (tag === '<li>') {
-                    listItemOpened = true;
-                    content.innerHTML += tag;
-                } else {
-                    content.innerHTML += tag;
-                }
-            }
-            index = closingTagIndex;
-        } else {
-            content.innerHTML += char;
-        }
-        index++;
-        if (index === htmlText.length) {
-            clearInterval(intervalId);
-            content.innerHTML += closingTags;
-            if (callback) {
-                callback();
-            }
-            Penis
-        }
-        if (listOpened && !listItemOpened && char === '\n') {
-            content.innerHTML += '<li>';
-            listItemOpened = true;
-        }
-    }, 20);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function focusInputField(inputField) {

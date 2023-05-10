@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Inconsolata&display=swap');
+/* @import url('https://fonts.googleapis.com/css?family=Inconsolata&display=swap'); */
 
 body {
     font-family: 'Inconsolata', monospace;
@@ -107,6 +107,37 @@ body {
 
 .message-div {
     padding-left: 10px;
+    padding-right: 10px;
+}
+
+.ai-tag {
+    color: var(--button-close-hover-color);
+}
+.user-tag {
+    color: var(--button-minimize-hover-color);
+}
+
+.button-prompt-examples {
+    background-color: var(--header-color);
+    border: none;
+    border-radius: 10px;
+    color: var(--scrollbar-thumb-hover-color);
+    cursor: pointer;
+    padding: 10px 10px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+    -webkit-transition: background-color 0.3s ease;
+}
+
+.button-prompt-examples:hover {
+    background-color: #333;
+    color: var(--text-color);
+}
+
+.button-prompt-examples:active {
+    background-color: #555;
+    color: #c1c1c1;
+    pointer-events: none;
 }
 
 
