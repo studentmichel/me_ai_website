@@ -1,5 +1,21 @@
 /* @import url('https://fonts.googleapis.com/css?family=Inconsolata&display=swap'); */
 
+.header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.header a {
+    display: block;
+    margin: 5px;
+}
+
+.header img {
+    width: 30px;
+    height: 30px;
+}
+
 body {
     font-family: 'Inconsolata', monospace;
     font-size: 12pt;
@@ -8,6 +24,36 @@ body {
     padding: 0;
     background-color: #8a8aff;
     height: 100.001vh;
+}
+
+.content {
+    min-height: 100%;
+    /* bottom margin of footer */
+    margin-bottom: -20px;
+}
+
+footer {
+    height: 20px;
+    background-color: #8a8aff;
+    color: #fff;
+    text-align: center;
+    /* fix to the bottom of the screen */
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.footer-content {
+    display: inline-block;
+    /* border-top: 1px solid #ccc; */
+    /* padding-top: 10px; */
+    font-size: 12px;
+}
+
+.footer-content p {
+    display: inline-block;
+    margin: 0 10px;
 }
 
 
@@ -86,6 +132,8 @@ body {
     display: flex;
     align-items: center;
     padding-left: 10px;
+    /* margin-top: 15px; */
+    /* margin-bottom: 15px; */
 }
 
 .terminal-prompt {
@@ -96,12 +144,20 @@ body {
 .terminal-input-field {
     background-color: transparent;
     width: calc(100% - 25px);
-    font-size: 14px;
+    font-family: 'Inconsolata', monospace;
+    font-size: 12pt;
+    font-weight: normal;
+    /* font-size: 14px; */
     margin-left: 5px;
     color: #7e8387;
     border: none;
-    /* resize: none; */
     overflow: hidden;
+}
+
+p {
+
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 
@@ -113,6 +169,7 @@ body {
 .ai-tag {
     color: var(--button-close-hover-color);
 }
+
 .user-tag {
     color: var(--button-minimize-hover-color);
 }
@@ -219,4 +276,5 @@ body {
 #anchor {
     overflow-anchor: auto;
     height: 1px;
+    margin-bottom: 50px;
 }

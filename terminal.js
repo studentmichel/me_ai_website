@@ -9,18 +9,18 @@ const aiTag = "<span class='ai-tag'>&lt;Michel[AI]&gt;</span>";
 const userTag = "<span class='user-tag'>&lt;You[Human?]&gt;</span>";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // let greetingText = "<p>Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience. Feel free to ask me anything!</p>";
     const greetingText = `<div><p>${aiTag} Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience.</p><p>Feel free to ask me anything!</p>`;
     const examplesText = "<div id='prompt-examples'><button class='button-prompt-examples'>Tell me about yourself.</button><button class='button-prompt-examples'>Why should I hire you?</button><button class='button-prompt-examples'>Can you show me your CV?</button></div></div>"
     // const fullText = `<p> This is a paragraph with a <span>span element</span>, an <img src="example.png" alt="example image" width="200" height="100">, and a <a href="https://www.example.com">link</a>.</p>`;
     const fullText = greetingText + examplesText;
-    addHtmlElementsFromString(fullText, true, () => {
-        // addTextDiv(examplesText, false);
-        // activate input field once greeting is over
-        toggleVisibility(terminalInput);
-        focusInputField(terminalInputField);
-    });
+    addHtmlElementsFromString(fullText, true, activateUserInputField);
 });
+
+
+function activateUserInputField() {
+    toggleVisibility(terminalInput);
+    focusInputField(terminalInputField);
+}
 
 
 terminalInputField.addEventListener('input', () => {
@@ -47,7 +47,7 @@ terminalInputField.addEventListener('keydown', (event) => {
         toggleVisibility(terminalInput);
 
         // add user message div
-        addHtmlElementsFromString(`<p>${userTag} ${userPrompt}</p>`)
+        addHtmlElementsFromString(`<p>${userTag} ${userPrompt}</p>`);
 
         // clear input field
         terminalInputField.value = '';
@@ -70,34 +70,13 @@ function addHtmlElementsFromString(text, withAnimation = false, callback) {
     // insert message div right above input field inside scroll view
     terminalBody.insertBefore(msgDiv, anchor);
 
-
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = text;
 
     // Get all the child nodes of the temporary div
     const childNodes = tempDiv.childNodes;
-    console.log("first ", childNodes)
-    const delay = 50;
-
+    const delay = withAnimation ? 20 : 0;
     addChildNodesWithDelay(msgDiv, childNodes, delay, callback);
-
-    // msgDiv.append(tempDiv);
-    // const elements = createHtmlElementsFromString(text);
-    // console.log(typeof(elements));
-    // const parent = msgDiv;
-    // console.log(elements);
-    // elements.forEach((element) => {
-    //     console.log(element);
-    // });
-    // addElementsToParent(parent, elements);
-
-    // // add animation to text if withAnimation
-    // if (withAnimation && callback)
-    //     animateText(msgDiv, text, callback)
-    // else if(withAnimation)
-    //     animateText(msgDiv, text)
-    // else
-    //     msgDiv.innerHTML += `<p>> ${text}</p>`;
 }
 
 async function addChildNodesWithDelay(parentNode, childNodes, delay, callback) {
@@ -110,42 +89,45 @@ async function addChildNodesWithDelay(parentNode, childNodes, delay, callback) {
                     if (childNode.id !== '')
                         newParentNode.id = childNode.id;
                     parentNode.appendChild(newParentNode);
-                    addChildNodesWithDelay(newParentNode, childNode.children, delay);
+                    addChildNodesWithDelay(newParentNode, childNode.children, delay, i === childNodes.length - 1 ? callback : null);
                     resolve();
-                } else if (childNode.nodeName === "P") {
+                } else if (childNode.nodeName === "P" && delay !== 0) {
+
                     const text = childNode.innerHTML;
-                    console.log("second ", text);
                     childNode.innerHTML = "";
-                    const newParentNode = document.createElement("p");
+                    const newParentNode = document.createElement("P");
                     if (childNode.id !== '')
                         newParentNode.id = childNode.id;
                     parentNode.appendChild(newParentNode);
-                    animateText(newParentNode, text, () => {
+                    animateText(newParentNode, text, delay, () => {
+                        if (i === childNodes.length - 1) {
+                            if (callback) {
+                                callback();
+                            }
+                        }
                         resolve();
                     });
                 } else {
                     parentNode.appendChild(childNode.cloneNode(true));
+                    if (i === childNodes.length - 1) {
+                        if (callback) {
+                            callback();
+                        }
+                    }
                     resolve();
                 }
-            }, i * delay);
+            }, i * 50);
         });
-    }
-    if (callback) {
-        callback();
     }
 }
 
-function animateText(content, htmlText, callback) {
+function animateText(content, htmlText, delay, callback) {
     const elements = getHtmlElements(htmlText);
-    console.log(elements);
     var elementIndex = 0;
     var charIndex = 0;
     var textIndex = 0;
-    // console.log("len: ", htmlText.length);
     const intervalId = setInterval(() => {
-        // console.log("textIndex: ", textIndex);
         const curElement = elements[elementIndex];
-        // console.log(curElement);
         const firstChar = curElement.charAt(charIndex);
         if (firstChar === "<") {
             content.innerHTML += elements[elementIndex];
@@ -161,14 +143,15 @@ function animateText(content, htmlText, callback) {
                 elementIndex++;
             }
         }
-        if (textIndex >= htmlText.length - 1) {
+        if (textIndex === htmlText.length) {
             clearInterval(intervalId);
             if (callback) {
                 callback();
             }
         }
-    }, 20);
+    }, delay);
 }
+
 function getHtmlElements(htmlString) {
     const div = document.createElement('div');
     div.innerHTML = htmlString.trim();
@@ -198,17 +181,10 @@ async function getGptResponse(prompt) {
     //...
 
     // add div and animate text
-    addHtmlElementsFromString(htmlResponse, true, () => {
-        // activate input field again after response is finished
-        toggleVisibility(terminalInput);
-        focusInputField(terminalInputField);
-    });
+    addHtmlElementsFromString(htmlResponse, true, activateUserInputField);
 }
 
-
 // OPEN AI CODE
-
-
 const apiInput = document.querySelector('.api-key');
 
 async function getResponse(prompt) {
@@ -254,25 +230,13 @@ async function getResponse(prompt) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 function focusInputField(inputField) {
     if (inputField) {
         inputField.focus();
     } else {
-        console.error(`Input field with id ${inputFieldId} not found.`);
+        console.error(`Input field with id ${inputField.id} not found.`);
     }
 }
-
 
 function toggleVisibility(div) {
     if (div.style.display === 'none') {
@@ -291,7 +255,6 @@ function toggleVisibility(div) {
 /*
 ##############################################################################
 */
-
 // Handle scrolling
 terminalBody.addEventListener('wheel', (event) => {
     terminalBody.scrollBy(0, event.deltaY);
