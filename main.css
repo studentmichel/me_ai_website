@@ -175,13 +175,18 @@ p {
 }
 
 .button-prompt-examples {
+    font-family: 'Inconsolata', monospace;
+    font-size: 12pt;
+    font-weight: normal;
     background-color: var(--header-color);
     border: none;
-    border-radius: 10px;
+    border-radius: 5px;
     color: var(--scrollbar-thumb-hover-color);
     cursor: pointer;
-    padding: 10px 10px;
+    padding: 5px 5px;
     margin-right: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     transition: background-color 0.3s ease;
     -webkit-transition: background-color 0.3s ease;
 }
@@ -194,7 +199,7 @@ p {
 .button-prompt-examples:active {
     background-color: #555;
     color: #c1c1c1;
-    pointer-events: none;
+    /* pointer-events: none; */
 }
 
 

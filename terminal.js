@@ -9,11 +9,8 @@ const aiTag = "<span class='ai-tag'>&lt;Michel[AI]&gt;</span>";
 const userTag = "<span class='user-tag'>&lt;You[Human?]&gt;</span>";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const greetingText = `<div><p>${aiTag} Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience.</p><p>Feel free to ask me anything!</p>`;
-    const examplesText = "<div id='prompt-examples'><button class='button-prompt-examples'>Tell me about yourself.</button><button class='button-prompt-examples'>Why should I hire you?</button><button class='button-prompt-examples'>Can you show me your CV?</button></div></div>"
-    // const fullText = `<p> This is a paragraph with a <span>span element</span>, an <img src="example.png" alt="example image" width="200" height="100">, and a <a href="https://www.example.com">link</a>.</p>`;
-    const fullText = greetingText + examplesText;
-    addHtmlElementsFromString(fullText, true, activateUserInputField);
+    const greetingText = `<div><p>${aiTag} Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience.</p><p>Feel free to ask me anything!</p><div id="prompt-examples"><button class="button-prompt-examples" onclick="addPrompt('Tell me about yourself.')">Tell me about yourself.</button><button class="button-prompt-examples" onclick="addPrompt('Why should I hire you?')">Why should I hire you?</button><button class="button-prompt-examples" onclick="addPrompt('Can you show me your CV?')">Can you show me your CV?</button></div></div>`;
+    addHtmlElementsFromString(greetingText, true, activateUserInputField);
 });
 
 
@@ -22,6 +19,31 @@ function activateUserInputField() {
     focusInputField(terminalInputField);
 }
 
+function addPrompt(promptText) {
+    console.log("called function with ", promptText);
+    // deactivate user input field while response is running
+    toggleVisibility(terminalInput);
+
+    // disable all buttons
+    const buttons = document.querySelectorAll(".button-prompt-examples");
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
+    }
+
+    // add user message div
+    addHtmlElementsFromString(`<p>${userTag} ${promptText}</p>`, true);
+
+    // clear input field
+    terminalInputField.value = '';
+
+    // get response
+    getGptResponse(promptText, () =>{
+        // reactivate the buttons after answer was given
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].disabled = false;
+        }
+    });
+}
 
 terminalInputField.addEventListener('input', () => {
     terminalInputField.style.height = 'auto';
@@ -159,18 +181,8 @@ function getHtmlElements(htmlString) {
     return nodes.map(node => node.outerHTML || node.textContent);
 }
 
-
-
-
-
-
-
-
-
-
-
 // Handle Sending Prompt to GPT API and add response to chat
-async function getGptResponse(prompt) {
+async function getGptResponse(prompt, callback) {
     // code for sending prompt to gpt api:
     const stringResponse = await getResponse(prompt);
     var htmlResponse = '';
@@ -181,7 +193,14 @@ async function getGptResponse(prompt) {
     //...
 
     // add div and animate text
-    addHtmlElementsFromString(htmlResponse, true, activateUserInputField);
+    if(callback)
+        addHtmlElementsFromString(htmlResponse, true, () => {
+            activateUserInputField();
+            callback();
+        });
+    else{
+        addHtmlElementsFromString(htmlResponse, true, activateUserInputField);
+    }
 }
 
 // OPEN AI CODE
