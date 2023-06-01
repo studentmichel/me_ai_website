@@ -37,7 +37,7 @@ function addPrompt(promptText) {
     terminalInputField.value = '';
 
     // get response
-    getGptResponse(promptText, () =>{
+    getGptResponse(promptText, () => {
         // reactivate the buttons after answer was given
         for (let i = 0; i < buttons.length; i++) {
             buttons[i].disabled = false;
@@ -81,7 +81,7 @@ terminalInputField.addEventListener('keydown', (event) => {
 
 
 
-function addHtmlElementsFromString(text, withAnimation = false, callback) {
+function addHtmlElementsFromString(text, withAnimation, callback) {
 
     // create div for new message
     var msgDiv = document.createElement('div');
@@ -193,61 +193,15 @@ async function getGptResponse(prompt, callback) {
     //...
 
     // add div and animate text
-    if(callback)
+    if (callback)
         addHtmlElementsFromString(htmlResponse, true, () => {
             activateUserInputField();
             callback();
         });
-    else{
+    else {
         addHtmlElementsFromString(htmlResponse, true, activateUserInputField);
     }
 }
-
-// OPEN AI CODE
-const apiInput = document.querySelector('.api-key');
-
-async function getResponse(prompt) {
-    const API_KEY = apiInput.value;
-    var responseText = '';
-    const failText = 'Sorry, my AI brain (aka the API of GPT3.5) is currently not connected. Por eso everything I say is bullshit:)';
-    try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    { role: 'system', content: 'Act like Michel Hartmann, a charismatic Mechatronics Student working at Mercedes-Benz that likes to do Software Developement' },
-                    { role: 'user', content: prompt }
-                ],
-                temperature: 1.0,
-                top_p: 0.7,
-                n: 1,
-                stream: false,
-                presence_penalty: 0,
-                frequency_penalty: 0,
-            }),
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            responseText = data.choices[0].message.content;
-            console.log(data);
-        } else {
-            responseText = failText;
-        }
-    } catch (error) {
-        console.error(error);
-        responseText = failText;
-    }
-    return responseText;
-}
-
-
-
 
 function focusInputField(inputField) {
     if (inputField) {
@@ -268,13 +222,34 @@ function toggleVisibility(div) {
 
 
 
+// ####################### Handle API Requests ###########################
+async function getResponse(prompt) {
+    try {
+      const response = await fetch('https://me-ai-node.onrender.com/api/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt })
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        const message = data.message;
+        return message;
+      } else {
+        const errorData = await response.json();
+        const error = errorData.error;
+        return error;
+      }
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+  
 
 
-
-/*
-##############################################################################
-*/
-// Handle scrolling
+// ####################### Handle Scrolling ###########################
 terminalBody.addEventListener('wheel', (event) => {
     terminalBody.scrollBy(0, event.deltaY);
     event.preventDefault();
