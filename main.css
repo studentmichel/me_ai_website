@@ -54,7 +54,37 @@ footer {
     margin: 0 10px;
 }
 
+.loader {
+    display: none;
+}
 
+.loader.visible {
+    display: block;
+    /* Show the loader when the 'visible' class is added */
+}
+
+.loader.visible::after {
+    content: attr(data-content);
+    animation: dotAnimation 1s infinite;
+}
+
+@keyframes dotAnimation {
+
+    0%,
+    20% {
+        content: attr(data-content) ' .';
+    }
+
+    30%,
+    50% {
+        content: attr(data-content) ' ..';
+    }
+
+    60%,
+    80% {
+        content: attr(data-content) ' ...';
+    }
+}
 
 
 :root {

@@ -6,7 +6,7 @@ const terminalInputField = document.querySelector('.terminal-input-field');
 toggleVisibility(terminalInput);
 
 const aiTag = "<span class='ai-tag'>&lt;Michel[AI]&gt;</span>";
-const userTag = "<span class='user-tag'>&lt;You[Human?]&gt;</span>";
+const userTag = "<span class='user-tag'>&lt;You[Human]&gt;</span>";
 
 document.addEventListener("DOMContentLoaded", () => {
     const greetingText = `<div><p>${aiTag} Moin, I'm Michel in AI form!</p><p>I'm here to answer any questions you may have about my work history and experience.</p><p>Feel free to ask me anything!</p><div id="prompt-examples"><button class="button-prompt-examples" onclick="addPrompt('Tell me about yourself.')">Tell me about yourself.</button><button class="button-prompt-examples" onclick="addPrompt('Why should I hire you?')">Why should I hire you?</button><button class="button-prompt-examples" onclick="addPrompt('Can you show me your CV?')">Can you show me your CV?</button></div></div>`;
@@ -183,14 +183,19 @@ function getHtmlElements(htmlString) {
 
 // Handle Sending Prompt to GPT API and add response to chat
 async function getGptResponse(prompt, callback) {
+    // Starting loading animation
+    toggleLoader(true);
+
     // code for sending prompt to gpt api:
     const stringResponse = await getResponse(prompt);
+
+    // Stopping loading animation
+    toggleLoader(false);
     var htmlResponse = '';
     if (stringResponse == '')
         htmlResponse = `<p>${aiTag} Sorry, my AI brain (aka the API of GPT3.5) is currently not connected. Por eso everything I say is bullshit:)</p>`;
     else
         htmlResponse = `<p>${aiTag} ${stringResponse}</p>`;
-    //...
 
     // add div and animate text
     if (callback)
@@ -202,6 +207,18 @@ async function getGptResponse(prompt, callback) {
         addHtmlElementsFromString(htmlResponse, true, activateUserInputField);
     }
 }
+
+function toggleLoader(startAnimation) {
+    var loader = document.querySelector('.loader');
+    if (startAnimation) {
+      loader.setAttribute('data-content', '');
+      loader.classList.add('visible');
+    } else {
+      loader.classList.remove('visible');
+    }
+  }
+  
+  
 
 function focusInputField(inputField) {
     if (inputField) {
@@ -224,8 +241,10 @@ function toggleVisibility(div) {
 
 // ####################### Handle API Requests ###########################
 async function getResponse(prompt) {
+    const apiUrl = "https://me-ai-node.onrender.com/api/data";
+    // const apiUrl = "http://localhost:3000/api/data";
     try {
-      const response = await fetch('https://me-ai-node.onrender.com/api/data', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -236,14 +255,16 @@ async function getResponse(prompt) {
       if (response.ok) {
         const data = await response.json();
         const message = data.message;
+        console.log(`response okay, returning data:\n${message}`);
         return message;
       } else {
         const errorData = await response.json();
         const error = errorData.error;
+        console.log(`response failed, returning error:\n${error}`);
         return error;
       }
     } catch (error) {
-      throw new Error(error.message);
+      return error;
     }
   }
   
