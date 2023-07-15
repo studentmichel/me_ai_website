@@ -14,6 +14,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+function addAIText(message, isAnimated = true, callback) {
+    var _text = `<div><p>${aiTag} ${message}</p></div>`;
+    addHtmlElementsFromString(_text, isAnimated, callback);
+}
+
+
+
 function activateUserInputField() {
     toggleVisibility(terminalInput);
     focusInputField(terminalInputField);
@@ -186,8 +193,9 @@ async function getGptResponse(prompt, callback) {
     // Starting loading animation
     toggleLoader(true);
 
+    var language = getCurrentLang();
     // code for sending prompt to gpt api:
-    const stringResponse = await getResponse(prompt);
+    const stringResponse = await getResponse(prompt, language);
 
     // Stopping loading animation
     toggleLoader(false);
@@ -240,7 +248,7 @@ function toggleVisibility(div) {
 
 
 // ####################### Handle API Requests ###########################
-async function getResponse(prompt) {
+async function getResponse(prompt, language) {
     const apiUrl = "https://me-ai-node.onrender.com/api/data";
     // const apiUrl = "http://localhost:3000/api/data";
     try {
@@ -249,7 +257,7 @@ async function getResponse(prompt) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, language })
       });
   
       if (response.ok) {
